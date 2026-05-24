@@ -1,6 +1,14 @@
-import campusHero from './assets/campus-hero.png'
 import './App.css'
 import logo from './assets/logo.png'
+import photo1 from './assets/1.jpeg'
+import photo2 from './assets/2.jpeg'
+import photo3 from './assets/3.jpeg'
+import photo4 from './assets/4.jpeg'
+import photo5 from './assets/5.jpeg'
+import photo6 from './assets/6.jpeg'
+import photo7 from './assets/7.jpeg'
+import photo8 from './assets/8.jpeg'
+import photo9 from './assets/9.jpeg'
 const navItems = [
   { label: 'Home', href: '#home' },
   { label: 'About Us', href: '#about' },
@@ -19,13 +27,53 @@ const highlights = [
   ' Inclusive community where every child feels valued and respected'
 ]
 
-const gallerySlots = [
-  'Campus Life',
-  'Classroom Activities',
-  'Events & Celebrations',
-  'Sports & Wellness',
-  'Art & Creativity',
-  'Achievements',
+const galleryPhotos = [
+  {
+    title: 'Warm Welcome',
+    image: photo5,
+    alt: 'Teachers welcoming visitors at the Dev School entrance',
+    featured: true,
+  },
+  {
+    title: 'Morning Activity',
+    image: photo7,
+    alt: 'Students doing a morning activity in the school courtyard',
+  },
+  {
+    title: 'Young Learners',
+    image: photo8,
+    alt: 'Students standing together in front of a colorful school wall',
+  },
+  {
+    title: 'Creative Work',
+    image: photo9,
+    alt: 'Students holding drawings during a school creative activity',
+  },
+  {
+    title: 'Achievement Moment',
+    image: photo6,
+    alt: 'A student receiving an award certificate and trophy',
+  },
+  {
+    title: 'School Program',
+    image: photo4,
+    alt: 'Speaker addressing a Dev School program from the podium',
+  },
+  {
+    title: 'Celebration Decor',
+    image: photo3,
+    alt: 'Mothers Day celebration decoration at school',
+  },
+  {
+    title: 'Program Address',
+    image: photo2,
+    alt: 'Teacher speaking from a decorated Dev School podium',
+  },
+  {
+    title: 'Leadership Visit',
+    image: photo1,
+    alt: 'School representative presenting flowers during a leadership visit',
+  },
 ]
 
 function App() {
@@ -69,8 +117,8 @@ function App() {
             </div>
           </div>
 
-          <div className="hero-media" aria-label="Modern school campus visual">
-            <img src={campusHero} alt="Modern school campus exterior" />
+          <div className="hero-media" aria-label="Dev School leadership visit visual">
+            <img src={photo1} alt="School representative presenting flowers during a leadership visit" />
           </div>
         </section>
 
@@ -89,6 +137,11 @@ The school promotes balanced development through academics, technology, arts, sp
 
             </p>
             <div className="highlight-panel">
+              <img
+                className="highlight-photo"
+                src={photo8}
+                alt="Dev School students gathered in the courtyard"
+              />
               {highlights.map((highlight) => (
                 <div className="highlight-item" key={highlight}>
                   <span aria-hidden="true"></span>
@@ -138,14 +191,17 @@ The school promotes balanced development through academics, technology, arts, sp
         <section className="section gallery-section" id="gallery">
           <div className="section-heading">
             <p className="eyebrow">Gallery</p>
-            <h2>Space reserved for school photos</h2>
+            <h2>Moments from Dev School</h2>
           </div>
           <div className="gallery-grid">
-            {gallerySlots.map((slot) => (
-              <div className="gallery-slot" key={slot}>
-                <span>+</span>
-                <p>{slot}</p>
-              </div>
+            {galleryPhotos.map((photo) => (
+              <figure
+                className={`gallery-card${photo.featured ? ' gallery-card-featured' : ''}`}
+                key={photo.title}
+              >
+                <img src={photo.image} alt={photo.alt} loading="lazy" />
+                <figcaption>{photo.title}</figcaption>
+              </figure>
             ))}
           </div>
         </section>
@@ -179,7 +235,10 @@ The school promotes balanced development through academics, technology, arts, sp
             </div>
             <div className="contact-card">
               <span>Phone</span>
-              <p>+91 00000 00000</p>
+              <p>
+                <a href="tel:+918890333093">8890333093</a>,{' '}
+                <a href="tel:+919414060681">9414060681</a>
+              </p>
             </div>
             <div className="contact-card">
               <span>Email</span>
