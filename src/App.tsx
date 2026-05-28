@@ -83,18 +83,19 @@ type CertificatePayload = {
   studentName: string
   rollNumber: string
   course: string
-  secondPhaseCompanyName: string
+  companyName: string
   internshipRole: string
   internshipDuration: string
   totalHoursOrWeeks: string
   issuedOn: string
+  secondPhaseCompanyName?: string
 }
 
 const initialCertificateData: Omit<CertificatePayload, 'issuedOn'> = {
   studentName: '',
   rollNumber: '',
   course: '',
-  secondPhaseCompanyName: '',
+  companyName: '',
   internshipRole: '',
   internshipDuration: '',
   totalHoursOrWeeks: '',
@@ -134,6 +135,8 @@ function formatDate(dateString: string) {
 }
 
 function CertificatePage({ data }: { data: CertificatePayload }) {
+  const companyName = data.companyName || data.secondPhaseCompanyName || ''
+
   return (
     <div className="certificate-page">
       <section className="certificate-sheet">
@@ -146,7 +149,7 @@ function CertificatePage({ data }: { data: CertificatePayload }) {
             <p>Dev School Jaipur</p>
             <h1>Certificate of Internship Completion</h1>
             <span className="certificate-subtitle">
-              Awarded for successful completion of the second phase industry
+              Awarded for successful completion of the industry
               internship
             </span>
           </header>
@@ -157,7 +160,7 @@ function CertificatePage({ data }: { data: CertificatePayload }) {
             <p className="certificate-intro">
               Roll Number <strong>{data.rollNumber}</strong> from{' '}
               <strong>{data.course}</strong>, for completing internship training at{' '}
-              <strong>{data.secondPhaseCompanyName}</strong> in the role of{' '}
+              <strong>{companyName}</strong> in the role of{' '}
               <strong>{data.internshipRole}</strong> for{' '}
               <strong>{data.internshipDuration}</strong>, with a total engagement
               of <strong>{data.totalHoursOrWeeks}</strong>.
@@ -167,7 +170,7 @@ function CertificatePage({ data }: { data: CertificatePayload }) {
           <div className="certificate-meta-grid">
             <div>
               <span>Company</span>
-              <p>{data.secondPhaseCompanyName}</p>
+              <p>{companyName}</p>
             </div>
             <div>
               <span>Role</span>
@@ -414,10 +417,10 @@ The school promotes balanced development through academics, technology, arts, sp
                 />
               </label>
               <label>
-                Second Phase Company Name
+                Company Name
                 <input
-                  name="secondPhaseCompanyName"
-                  value={certificateForm.secondPhaseCompanyName}
+                  name="companyName"
+                  value={certificateForm.companyName}
                   onChange={updateField}
                   required
                 />
