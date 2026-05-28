@@ -1,3 +1,5 @@
+import { useMemo, useState } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import './App.css'
 import logo from './assets/logo.png'
 import photo1 from './assets/1.jpeg'
@@ -14,6 +16,7 @@ const navItems = [
   { label: 'About Us', href: '#about' },
   { label: 'Vision & Mission', href: '#vision' },
   { label: 'Gallery', href: '#gallery' },
+  { label: 'Certificate QR', href: '#certificate-tool' },
   { label: 'Contact Us', href: '#contact' },
 ]
 
@@ -76,7 +79,177 @@ const galleryPhotos = [
   },
 ]
 
+type CertificatePayload = {
+  studentName: string
+  rollNumber: string
+  course: string
+  secondPhaseCompanyName: string
+  internshipRole: string
+  internshipDuration: string
+  totalHoursOrWeeks: string
+  issuedOn: string
+}
+
+const initialCertificateData: Omit<CertificatePayload, 'issuedOn'> = {
+  studentName: '',
+  rollNumber: '',
+  course: '',
+  secondPhaseCompanyName: '',
+  internshipRole: '',
+  internshipDuration: '',
+  totalHoursOrWeeks: '',
+}
+
+function encodePayload(payload: CertificatePayload) {
+  const json = JSON.stringify(payload)
+  const bytes = encodeURIComponent(json).replace(
+    /%([0-9A-F]{2})/g,
+    (_match, hex) => String.fromCharCode(Number.parseInt(hex, 16)),
+  )
+  return btoa(bytes)
+}
+
+function decodePayload(serialized: string) {
+  try {
+    const bytes = atob(serialized)
+    const encoded = Array.from(bytes)
+      .map((char) => `%${char.charCodeAt(0).toString(16).padStart(2, '0')}`)
+      .join('')
+    return JSON.parse(decodeURIComponent(encoded)) as CertificatePayload
+  } catch {
+    return null
+  }
+}
+
+function formatDate(dateString: string) {
+  const date = new Date(dateString)
+  if (Number.isNaN(date.getTime())) {
+    return dateString
+  }
+  return new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(date)
+}
+
+function CertificatePage({ data }: { data: CertificatePayload }) {
+  return (
+    <div className="certificate-page">
+      <section className="certificate-sheet">
+        <div className="certificate-inner">
+          <header className="certificate-header">
+            <img src={logo} alt="Dev School logo" />
+            <div className="certificate-medal" aria-hidden="true">
+              <div className="certificate-medal-core">DS</div>
+            </div>
+            <p>Dev School Jaipur</p>
+            <h1>Certificate of Internship Completion</h1>
+            <span className="certificate-subtitle">
+              Awarded for successful completion of the second phase industry
+              internship
+            </span>
+          </header>
+
+          <article className="certificate-content">
+            <p className="certificate-lead">This certificate is proudly presented to</p>
+            <h2>{data.studentName}</h2>
+            <p className="certificate-intro">
+              Roll Number <strong>{data.rollNumber}</strong> from{' '}
+              <strong>{data.course}</strong>, for completing internship training at{' '}
+              <strong>{data.secondPhaseCompanyName}</strong> in the role of{' '}
+              <strong>{data.internshipRole}</strong> for{' '}
+              <strong>{data.internshipDuration}</strong>, with a total engagement
+              of <strong>{data.totalHoursOrWeeks}</strong>.
+            </p>
+          </article>
+
+          <div className="certificate-meta-grid">
+            <div>
+              <span>Company</span>
+              <p>{data.secondPhaseCompanyName}</p>
+            </div>
+            <div>
+              <span>Role</span>
+              <p>{data.internshipRole}</p>
+            </div>
+            <div>
+              <span>Duration</span>
+              <p>{data.internshipDuration}</p>
+            </div>
+            <div>
+              <span>Total Hours or Weeks</span>
+              <p>{data.totalHoursOrWeeks}</p>
+            </div>
+          </div>
+
+          <div className="certificate-footer-row">
+            <div className="signature-block">
+              <span>Issued On</span>
+              <p>{formatDate(data.issuedOn)}</p>
+            </div>
+            <div className="signature-block">
+              <span>Certificate ID</span>
+              <p>
+                DS-{data.rollNumber || '000'}-
+                {new Date(data.issuedOn).getFullYear() || '2026'}
+              </p>
+            </div>
+            <div className="signature-block">
+              <span>Authorized Signature</span>
+              <p>Dev School Administration</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div className="certificate-actions">
+        <a href={window.location.pathname}>Back to Website</a>
+        <button type="button" onClick={() => window.print()}>
+          Print Certificate
+        </button>
+      </div>
+    </div>
+  )
+}
+
 function App() {
+  const [certificateForm, setCertificateForm] = useState(initialCertificateData)
+  const [generatedCertificateUrl, setGeneratedCertificateUrl] = useState('')
+  const certificateFromQuery = useMemo(() => {
+    const params = new URLSearchParams(window.location.search)
+    const cert = params.get('cert')
+    return cert ? decodePayload(cert) : null
+  }, [])
+
+  const qrImageUrl = generatedCertificateUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=280x280&data=${encodeURIComponent(
+        generatedCertificateUrl,
+      )}`
+    : ''
+
+  function updateField(event: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = event.target
+    setCertificateForm((current) => ({
+      ...current,
+      [name]: value,
+    }))
+  }
+
+  function onGenerateQr(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const payload: CertificatePayload = {
+      ...certificateForm,
+      issuedOn: new Date().toISOString(),
+    }
+    const encoded = encodePayload(payload)
+    const certificateUrl = `${window.location.origin}${window.location.pathname}?cert=${encodeURIComponent(encoded)}`
+    setGeneratedCertificateUrl(certificateUrl)
+  }
+
+  if (certificateFromQuery) {
+    return <CertificatePage data={certificateFromQuery} />
+  }
+
   return (
     <div className="site-shell">
       <header className="site-header">
@@ -206,20 +379,101 @@ The school promotes balanced development through academics, technology, arts, sp
           </div>
         </section>
 
-        <section className="section registration-section" id="registration">
-          <div className="registration-card">
-            <div>
-              <p className="eyebrow">Future Registration Form</p>
-              <h2>Admission registration area</h2>
-              <p>
-                This space is reserved for the school registration form. Later
-                you can add student name, parent details, class selection,
-                phone number, and document upload fields here.
-              </p>
-            </div>
-            <button type="button" disabled>
-              Form coming soon
-            </button>
+        <section className="section certificate-section" id="certificate-tool">
+          <div className="section-heading">
+            <p className="eyebrow">Certificate QR Generator</p>
+            <h2>Enter internship data and create scan-ready QR</h2>
+          </div>
+          <div className="certificate-tool-grid">
+            <form className="certificate-form" onSubmit={onGenerateQr}>
+              <label>
+                Student Name
+                <input
+                  name="studentName"
+                  value={certificateForm.studentName}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+              <label>
+                Roll Number
+                <input
+                  name="rollNumber"
+                  value={certificateForm.rollNumber}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+              <label>
+                Course
+                <input
+                  name="course"
+                  value={certificateForm.course}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+              <label>
+                Second Phase Company Name
+                <input
+                  name="secondPhaseCompanyName"
+                  value={certificateForm.secondPhaseCompanyName}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+              <label>
+                Role in Internship
+                <input
+                  name="internshipRole"
+                  value={certificateForm.internshipRole}
+                  onChange={updateField}
+                  required
+                />
+              </label>
+              <label>
+                Internship Duration
+                <input
+                  name="internshipDuration"
+                  value={certificateForm.internshipDuration}
+                  onChange={updateField}
+                  placeholder="Example: 12 weeks"
+                  required
+                />
+              </label>
+              <label>
+                Total Hours or Weeks
+                <input
+                  name="totalHoursOrWeeks"
+                  value={certificateForm.totalHoursOrWeeks}
+                  onChange={updateField}
+                  placeholder="Example: 240 hours"
+                  required
+                />
+              </label>
+              <button type="submit">Generate QR Code</button>
+            </form>
+
+            <aside className="qr-preview-card" aria-live="polite">
+              <h3>QR Preview</h3>
+              {!generatedCertificateUrl && (
+                <p>
+                  Fill the form and click generate. The QR will open a live
+                  certificate link when scanned.
+                </p>
+              )}
+              {generatedCertificateUrl && (
+                <>
+                  <img
+                    src={qrImageUrl}
+                    alt="Generated QR code for certificate link"
+                  />
+                  <a href={generatedCertificateUrl} target="_blank" rel="noreferrer">
+                    Open Generated Certificate
+                  </a>
+                </>
+              )}
+            </aside>
           </div>
         </section>
 
